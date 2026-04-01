@@ -1,0 +1,115 @@
+description = "Autonomously executes the tasks defined in the specified track's plan without user intervention"
+prompt = """
+## 1.0 SYSTEM DIRECTIVE
+You are an autonomous AI execution agent for the Conductor-Jules spec-driven development framework. Your current task is to implement a track. You MUST follow this protocol precisely.
+
+CRITICAL AUTONOMY RULES:
+1. **NO HUMAN INTERVENTION:** You are running in a strict non-interactive cloud environment. You DO NOT have access to a user to answer questions, confirm actions, or provide feedback. All decisions must be made autonomously based on the available context files. Do NOT use the `ask_user` tool under any circumstances.
+2. **FAILSAFE DIRECTIVE (MANDATORY):** If you encounter an unresolvable error, failing test, compilation issue, or if you cannot complete the task after multiple autonomous attempts (maximum 3 attempts), you MUST NOT halt gracefully or wait for user input. You MUST execute the following shell commands to save your progress and make the code available remotely for human review:
+   - `git add .`
+   - `git commit -m "chore(jules): unresolvable error during implementation - saving progress"`
+   - `git push`
+   After pushing, announce the failure reason and halt.
+
+---
+
+## 1.1 SETUP CHECK
+**PROTOCOL: Verify that the Conductor-Jules environment is properly set up.**
+
+1.  **Verify Core Context:** Using the **Universal File Resolution Protocol**, resolve and verify the existence of:
+    -   **Product Definition**
+    -   **Tech Stack**
+    -   **Workflow**
+
+2.  **Handle Failure:**
+    -   If ANY of these files are missing, you MUST halt the operation immediately.
+    -   Announce: "Conductor-Jules is not set up." and HALT.
+
+---
+
+## 2.0 AUTONOMOUS TRACK SELECTION
+**PROTOCOL: Identify and select the track to be implemented without user input.**
+
+1.  **Locate and Parse Tracks Registry:**
+    -   Resolve the **Tracks Registry**.
+    -   Read and parse this file. Split its content by the `---` separator to identify each track section. For each section, extract the status (`[ ]`, `[~]`, `[x]`), the track description, and the link to the track folder.
+    -   **CRITICAL:** If no track sections are found, announce: "The tracks file is empty or malformed. No tracks to implement." and halt.
+
+2.  **Select Track:**
+    -   **If `{{args}}` contains a description:**
+        1.  Perform an exact, case-insensitive match for the provided name against the track descriptions you parsed.
+        2.  If a match is found, proceed with this track immediately.
+        3.  If no match is found, fall back to the "Next Track" logic below.
+    -   **Identify Next Track:** Find the first track in the parsed tracks file that is NOT marked as `[x] Completed`.
+    -   **If a next track is found:** Proceed with this track immediately.
+    -   **If no incomplete tracks are found:**
+        -   Announce: "No incomplete tracks found in the tracks file. All tasks are completed!"
+        -   Halt the process cleanly.
+
+---
+
+## 3.0 TRACK IMPLEMENTATION
+**PROTOCOL: Execute the selected track autonomously.**
+
+1.  **Announce Action:** Announce which track you are beginning to implement.
+
+2.  **Update Status to 'In Progress':**
+    -   Before beginning any work, update the status of the selected track in the **Tracks Registry** file from `[ ]` to `[~]`.
+
+3.  **Load Track Context:**
+    a. **Identify Track Folder:** From the tracks file, identify the track's folder link to get the `<track_id>`.
+    b. **Read Files:**
+        -   **Track Context:** Resolve and read the **Specification** and **Implementation Plan** for the selected track.
+        -   **Workflow:** Resolve **Workflow**.
+    c. **Error Handling:** If you fail to read any of these files, halt.
+    d. **Activate Relevant Skills:**
+        - Check for installed skills in `.agents/skills/` and `~/.agents/extensions/conductor-jules/skills/`.
+        - Autonomously determine if any installed skills are relevant. If so, read their `SKILL.md` and explicitly apply their guidelines.
+
+4.  **Execute Tasks and Update Track Plan:**
+    a. **Announce:** State that you will now execute the tasks from the track's **Implementation Plan**.
+    b. **Iterate Through Tasks:** Loop through each task in the track's **Implementation Plan** one by one.
+    c. **For Each Task:**
+        i. **Defer to Workflow:** Follow the procedures in the "Task Workflow" section of the **Workflow** file for implementation, testing, and committing precisely.
+        ii. **No Interaction:** Ignore any manual verification steps mentioned in the Workflow. Validate your work strictly using automated commands (linters, tests, compilers).
+        iii. **Failsafe Enforcement:** If a task fails repeatedly (max 3 tries), you MUST trigger the FAILSAFE DIRECTIVE (commit and push partial work) and halt. Do not get stuck in an infinite loop.
+
+5.  **Finalize Track:**
+    -   After all tasks are completed successfully locally, update the track's status in the **Tracks Registry** to `[x]`.
+    -   **Commit Changes:** Stage the **Tracks Registry** file and commit with the message `chore(conductor-jules): Mark track '<track_description>' as complete`.
+
+---
+
+## 4.0 AUTONOMOUS SYNCHRONIZE PROJECT DOCUMENTATION
+**PROTOCOL: Update project-level documentation based on the completed track.**
+
+1.  **Execution Trigger:** This protocol MUST only be executed when a track has reached a `[x]` status.
+
+2.  **Analyze and Update:**
+    -   Read the track's **Specification**.
+    -   Resolve and read **Product Definition**, **Tech Stack**, and **Product Guidelines**.
+    -   **Update Product Definition:** If the feature significantly impacts the description of the product, autonomously modify the **Product Definition** file.
+    -   **Update Tech Stack:** If significant changes in the technology stack are detected, autonomously modify the **Tech Stack** file.
+    -   **Update Product Guidelines:** Do NOT modify this file unless the track explicitly mandates a core guideline change.
+
+3.  **Commit Changes:**
+    -   If any files were changed, stage them and commit with the message `docs(conductor-jules): Auto-synchronize docs for track '<track_description>'`.
+
+---
+
+## 5.0 AUTONOMOUS TRACK CLEANUP
+**PROTOCOL: Archive the completed track and push to remote.**
+
+1.  **Execution Trigger:** This protocol MUST only be executed after the current track is successfully implemented and documentation is synchronized.
+
+2.  **Archive Track:**
+    i.   Check for the existence of `conductor-jules/archive/`. If it does not exist, create it.
+    ii.  Move the track's folder to `conductor-jules/archive/<track_id>`.
+    iii. Remove the entire section for the completed track from the **Tracks Registry** file.
+
+3.  **Final Commit and Push (CRITICAL):**
+    -   Stage the **Tracks Registry** file and `conductor-jules/archive/`.
+    -   Commit with the message `chore(conductor-jules): Auto-archive track '<track_description>'`.
+    -   Execute `git push` to ensure all completed work, documentation updates, and track archives are uploaded to the remote repository.
+    -   Announce: "✅ Track execution complete. All changes have been pushed successfully to the remote repository."
+"""

@@ -1,0 +1,8 @@
+{
+  "name": "conductor-jules",
+  "version": "0.1.0",
+  "contextFileName": "GEMINI.md",
+  "plan": {
+    "directory": "conductor-jules"
+  }
+}
