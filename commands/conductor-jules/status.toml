@@ -79,3 +79,4 @@ CRITICAL AUTONOMY RULES:
 - **Phase Progress:** [Tasks Completed] / [Total Tasks] tasks done
 - **Current Target:** `[Insert the exact text of the [~] or next [ ] task from plan.md]`
 - **Next Steps:** [e.g., "Run `git pull` to get Jules's latest code and run `/conductor-jules:review`", or "Run `/conductor-jules:dispatch-jules` to start this track."]
+"""
